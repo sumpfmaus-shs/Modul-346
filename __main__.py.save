@@ -1,0 +1,37 @@
+import pulumi
+import pulumi_aws as aws
+
+# Define a VPC
+vpc = aws.ec2.Vpc("my-vpc", cidr_block="10.0.0.0/16")
+
+# Define a Subnet
+subnet = aws.ec2.Subnet("my-subnet",
+    vpc_id=vpc.id,
+    cidr_block="10.0.1.0/24",
+    availability_zone="us-east-1a")
+
+# Define a Security Group
+security_group = aws.ec2.SecurityGroup("web-secgrp",
+    vpc_id=vpc.id,
+    description='Enable SSH access',
+    ingress=[{
+        'protocol': 'tcp',
+        'from_port': 22,
+        'to_port': 22,
+        'cidr_blocks': ['0.0.0.0/0'],
+    }])
+
+# Define an EC2 instance
+server = aws.ec2.Instance("web-server-www",
+    instance_type="t2.micro",
+    vpc_security_group_ids=[security_group.id],
+    ami="",  # Ersetzen Sie dies durch eine gültige AMI-ID für us-east-1
+    subnet_id=subnet.id,
+    tags={
+        "Name": "web-server-www",
+    })
+
+# Export the public IP and DNS of the instance
+pulumi.export('public_ip', server.public_ip)
+pulumi.export('public_dns', server.public_dns)
+

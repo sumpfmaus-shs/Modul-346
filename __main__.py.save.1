@@ -1,0 +1,60 @@
+import pulumimport pulumi
+import pulumi_aws as aws
+
+# Create a VPC
+vpc = aws.ec2.Vpc("lab-vpc", cidr_block="10.10.0.0/16")
+
+# Create a Subnet
+subnet = aws.ec2.Subnet("lab-subnet",
+    vpc_id=vpc.id,
+    cidr_block="10.10.10.0/24",
+    availability_zone="us-west-1a")
+
+# Create a Security Group
+security_group = aws.ec2.SecurityGroup("lab-secgrp",
+    vpc_id=vpc.id,
+    description='Enable RDP access',
+    ingress=[{
+        'protocol': 'tcp',
+        'from_port': 3389,
+        'to_port': 3389,
+        'cidr_blocks': ['0.0.0.0/0'],
+    }])
+
+# Function to create an EC2 instance
+def create_instance(name, private_ip):
+    return aws.ec2.Instance(name,
+        instance_type="t3.medium",  # 2 Kerne und 4 GB RAM
+        vpc_security_group_ids=[security_group.id],
+        ami="",  # Gültige AMI-ID für Windows Server 2022 in us-west-1
+        subnet_id=subnet.id,
+        private_ip=private_ip,
+        tags={
+            "Name": name,
+        })
+
+# Create EC2 instances
+lab_boss1 = create_instance("lab-boss1", "10.10.10.1")
+lab_boss2 = create_instance("lab-boss2", "10.10.10.2")
+lab_dhcp1 = create_instance("lab-dhcp1", "10.10.10.3")
+lab_dhcp2 = create_instance("lab-dhcp2", "10.10.10.4")
+lab_file1 = create_instance("lab-file1", "10.10.10.5")
+lab_file2 = create_instance("lab-file2", "10.10.10.6")
+lab_wsus1 = create_instance("lab-wsus1", "10.10.10.7")
+
+# Export the public IP and DNS of the instances
+pulumi.export('lab_boss1_public_ip', lab_boss1.public_ip)
+pulumi.export('lab_boss1_public_dns', lab_boss1.public_dns)
+pulumi.export('lab_boss2_public_ip', lab_boss2.public_ip)
+pulumi.export('lab_boss2_public_dns', lab_boss2.public_dns)
+pulumi.export('lab_dhcp1_public_ip', lab_dhcp1.public_ip)
+pulumi.export('lab_dhcp1_public_dns', lab_dhcp1.public_dns)
+pulumi.export('lab_dhcp2_public_ip', lab_dhcp2.public_ip)
+pulumi.export('lab_dhcp2_public_dns', lab_dhcp2.public_dns)
+pulumi.export('lab_file1_public_ip', lab_file1.public_ip)
+pulumi.export('lab_file1_public_dns', lab_file1.public_dns)
+pulumi.export('lab_file2_public_ip', lab_file2.public_ip)
+pulumi.export('lab_file2_public_dns', lab_file2.public_dns)
+pulumi.export('lab_wsus1_public_ip', lab_wsus1.public_ip)
+pulumi.export('lab_wsus1_public_dns', lab_wsus1.public_dns)
+

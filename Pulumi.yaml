@@ -1,0 +1,7 @@
+name: Modul346
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: Modul346-Cloud-Project
+
